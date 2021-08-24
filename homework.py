@@ -11,7 +11,7 @@ homeworks = {}
 load_dotenv()
 logging.basicConfig(
     level=logging.DEBUG,
-    filename='main.log', 
+    filename='main.log',
     format='%(asctime)s, %(levelname)s, %(name)s, %(message)s'
 )
 PRAKTIKUM_TOKEN = os.getenv('PRAKTIKUM_TOKEN')
