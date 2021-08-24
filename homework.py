@@ -54,12 +54,13 @@ def send_message(message):
 def main():
     logging.debug('Бот был запущен')
     # случайная дата, с начала которой домашек не сдавалось
-    date = datetime.date(year=2021, month=8, day=23)
+    date = datetime.date(year=2020, month=8, day=23)
     timestamp = time.mktime(date.timetuple())  # Начальное значение timestamp
     while True:
         try:
-            homework = get_homeworks(int(timestamp))
-            if (homework['homeworks']):
+            homeworks = get_homeworks(int(timestamp))
+            if (homeworks['homeworks']):
+                homework = homeworks['homeworks'][0]
                 if (homework['status'] != 'reviewing'):
                     text = parse_homework_status(homework)
                     send_message(text)
