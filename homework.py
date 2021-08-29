@@ -28,16 +28,15 @@ last_hw_checked = False
 
 def parse_homework_status(homework):
     global last_hw_checked
+    if ({'status', 'homework_name'} >= homework.keys()):
+        raise KeyError('Нужные данные не найдены в ответе')
     homework_name = homework['homework_name']
     status = homework['status']
-    check: bool
-    check = bool(homework_name) and bool(status)
-    if ((status in verdicts.keys()) and check):
-        last_hw_checked = verdicts[status][1]
-        return (f'У вас проверили работу "{homework_name}"!'
-                f'\n\n{verdicts[status][0]}')
-    else:
+    if ((status not in verdicts.keys())):
         raise KeyError('Неизвестный статус проверки')
+    last_hw_checked = verdicts[status][1]
+    return (f'У вас проверили работу "{homework_name}"!'
+            f'\n\n{verdicts[status][0]}')
 
 
 def get_homeworks(current_timestamp):
