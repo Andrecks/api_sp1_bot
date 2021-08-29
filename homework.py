@@ -5,8 +5,9 @@ import telegram
 import logging
 from dotenv import load_dotenv
 
-verdicts = {'approved': 'Ревьюеру всё понравилось, работа зачтена!',
-            'rejected': 'К сожалению, в работе нашлись ошибки.',
+verdicts = {'approved': ['Ревьюеру всё понравилось, работа зачтена!', True],
+            'rejected': ['К сожалению, в работе нашлись ошибки.', True],
+            'reviewing': ['Работу проверяют', False]
             }
 load_dotenv()
 logging.basicConfig(
@@ -26,11 +27,13 @@ last_hw_checked = False
 
 
 def parse_homework_status(homework):
+    global last_hw_checked
     homework_name = homework['homework_name']
     status = homework['status']
     if status in verdicts.keys():
+        last_hw_checked = verdicts[status][1]
         return (f'У вас проверили работу "{homework_name}"!'
-                f'\n\n{verdicts[status]}')
+                f'\n\n{verdicts[status][0]}')
     else:
         raise KeyError('Неизвестный статус проверки')
 
@@ -55,18 +58,13 @@ def main():
     timestamp = 0
     while True:
         try:
-            # парсим только в случае если есть текущая домашка не проверена
-            while last_hw_checked is False:
-                homeworks = get_homeworks(int(timestamp))
-                homework = homeworks['homeworks'][0]
-                if (homework['status'] != 'reviewing'):
-                    if (homework['status'] == 'approved'):
-                        last_hw_checked = True
-                    else:
-                        last_hw_checked = False
-                    text = parse_homework_status(homework)
-                    send_message(text)
-                time.sleep(5 * 60)  # Опрашивать раз в пять минут
+            homeworks = get_homeworks(int(timestamp))
+            homework = homeworks['homeworks'][0]
+            text = parse_homework_status(homework)
+            # Отправляем сообщение только в случае, если дз проверено
+            if (last_hw_checked is True):
+                send_message(text)
+            time.sleep(5 * 60)  # Опрашивать раз в пять минут
         except Exception as e:
             text = f'Бот упал с ошибкой: {e}'
             logging.error(text)
