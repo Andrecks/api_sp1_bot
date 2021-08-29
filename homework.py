@@ -67,7 +67,6 @@ def main():
                         last_hw_checked = False
                     text = parse_homework_status(homework)
                     send_message(text)
-                    sys.exit()
                 time.sleep(5 * 60)  # Опрашивать раз в пять минут
         except Exception as e:
             text = f'Бот упал с ошибкой: {e}'
