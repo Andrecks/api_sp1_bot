@@ -18,19 +18,15 @@ logging.basicConfig(
 PRAKTIKUM_TOKEN = os.getenv('PRAKTIKUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
-# Переменная для подсчета успешно сданных домашек.
-hw_count = int(os.getenv('COUNTER'))
-# проинициализируйте бота здесь,
-# чтобы он был доступен в каждом нижеобъявленном методе,
-# и не нужно было прокидывать его в каждый вызов
 bot = telegram.Bot(token=TELEGRAM_TOKEN)
 URL = 'https://praktikum.yandex.ru/'
-
-# на данный момент проверенных там 5.
+# Новый мехзанизм отслеживания статуса последней домашки
+# Становится Верным, только при условии, что последняя работа
+# была успешно зачтена
+last_hw_checked = False
 
 
 def parse_homework_status(homework):
-    global hw_count
     homework_name = homework['homework_name']
     status = homework['status']
     if status in verdicts.keys():
@@ -55,23 +51,24 @@ def send_message(message):
 
 
 def main():
-    global hw_count
+    global last_hw_checked
     logging.debug('Бот был запущен')
-    # date = datetime.date(year=2020, month=8, day=23)
-    timestamp = 0  # time.mktime(date.timetuple())
+    timestamp = 0
     while True:
         try:
-            homeworks = get_homeworks(int(timestamp))
-            # парсим только в случае если есть домашки, которые не прошли ревью
-            if (len(homeworks['homeworks']) > hw_count):
+            # парсим только в случае если есть текущая домашка не проверена
+            while last_hw_checked is False:
+                homeworks = get_homeworks(int(timestamp))
                 homework = homeworks['homeworks'][0]
                 if (homework['status'] != 'reviewing'):
                     if (homework['status'] == 'approved'):
-                        os.environ['COUNTER'] = hw_count + 1
+                        last_hw_checked = True
+                    else:
+                        last_hw_checked = False
                     text = parse_homework_status(homework)
                     send_message(text)
                     sys.exit()
-            time.sleep(5 * 60)  # Опрашивать раз в пять минут
+                time.sleep(5 * 60)  # Опрашивать раз в пять минут
         except Exception as e:
             text = f'Бот упал с ошибкой: {e}'
             logging.error(text)
