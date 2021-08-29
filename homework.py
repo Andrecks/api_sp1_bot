@@ -18,46 +18,44 @@ logging.basicConfig(
 PRAKTIKUM_TOKEN = os.getenv('PRAKTIKUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
-
+# Переменная для подсчета успешно сданных домашек.
+hw_count = int(os.getenv('COUNTER'))
 # проинициализируйте бота здесь,
 # чтобы он был доступен в каждом нижеобъявленном методе,
 # и не нужно было прокидывать его в каждый вызов
-Bot = telegram.Bot(token=TELEGRAM_TOKEN)
-Url = 'https://praktikum.yandex.ru/'
-HW_count = 5  # Переменная для подсчета успешно сданных домашек.
+bot = telegram.Bot(token=TELEGRAM_TOKEN)
+URL = 'https://praktikum.yandex.ru/'
+
 # на данный момент проверенных там 5.
 
 
 def parse_homework_status(homework):
-    global HW_count
-    try:
-        homework_name = homework['homework_name']
-        status = homework['status']
-    except IndexError as error:
-        return error
+    global hw_count
+    homework_name = homework['homework_name']
+    status = homework['status']
     if status in verdicts.keys():
         return (f'У вас проверили работу "{homework_name}"!'
                 f'\n\n{verdicts[status]}')
     else:
-        return (logging.error('Неизвестный статус домашки'))
+        raise KeyError('Неизвестный статус проверки')
 
 
 def get_homeworks(current_timestamp):
     headers = {'Authorization': f'OAuth {PRAKTIKUM_TOKEN}'}
     payload = {'from_date': current_timestamp}
     url_add = 'api/user_api/homework_statuses/'
-    homework_statuses = requests.get(Url + url_add,
+    homework_statuses = requests.get(URL + url_add,
                                      headers=headers, params=payload)
     return homework_statuses.json()
 
 
 def send_message(message):
     logging.info('Отправлено сообщение')
-    return Bot.send_message(chat_id=CHAT_ID, text=message)
+    return bot.send_message(chat_id=CHAT_ID, text=message)
 
 
 def main():
-    global HW_count
+    global hw_count
     logging.debug('Бот был запущен')
     # date = datetime.date(year=2020, month=8, day=23)
     timestamp = 0  # time.mktime(date.timetuple())
@@ -65,9 +63,11 @@ def main():
         try:
             homeworks = get_homeworks(int(timestamp))
             # парсим только в случае если есть домашки, которые не прошли ревью
-            if (len(homeworks) > HW_count):
+            if (len(homeworks['homeworks']) > hw_count):
                 homework = homeworks['homeworks'][0]
                 if (homework['status'] != 'reviewing'):
+                    if (homework['status'] == 'approved'):
+                        os.environ['COUNTER'] = hw_count + 1
                     text = parse_homework_status(homework)
                     send_message(text)
                     sys.exit()
