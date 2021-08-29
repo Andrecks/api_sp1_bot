@@ -30,7 +30,9 @@ def parse_homework_status(homework):
     global last_hw_checked
     homework_name = homework['homework_name']
     status = homework['status']
-    if status in verdicts.keys():
+    check: bool
+    check = bool(homework_name) and bool(status)
+    if ((status in verdicts.keys()) and check):
         last_hw_checked = verdicts[status][1]
         return (f'У вас проверили работу "{homework_name}"!'
                 f'\n\n{verdicts[status][0]}')
