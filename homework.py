@@ -3,7 +3,6 @@ import time
 import requests
 import telegram
 import logging
-import sys
 from dotenv import load_dotenv
 
 verdicts = {'approved': 'Ревьюеру всё понравилось, работа зачтена!',
