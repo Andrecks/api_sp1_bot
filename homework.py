@@ -22,13 +22,14 @@ bot = telegram.Bot(token=TELEGRAM_TOKEN)
 URL = 'https://praktikum.yandex.ru/'
 # Новый мехзанизм отслеживания статуса последней домашки
 # Становится Верным, только при условии, что последняя работа
-# была успешно зачтена
+# была *зачтена)
 last_hw_checked = False
 
 
 def parse_homework_status(homework):
     global last_hw_checked
-    if ({'status', 'homework_name'} >= homework.keys()):
+    if (('status' not in homework.keys()
+         ) or ('homework_name' not in homework.keys())):
         raise KeyError('Нужные данные не найдены в ответе')
     homework_name = homework['homework_name']
     status = homework['status']
